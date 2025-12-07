@@ -146,9 +146,18 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
                 return;
             }
 
+            $amount_html      = '<strong class="woo-expected-delivery-date-free-shipping-amount">' . wp_kses_post( wc_price( $remaining ) ) . '</strong>';
+            $free_delivery    = '<strong class="woo-expected-delivery-date-free-shipping-label">' . esc_html__( 'FREE DELIVERY', 'woo-expected-delivery-date' ) . '</strong>';
+            $notice_content   = sprintf( __( 'Add %1$s more to get %2$s.', 'woo-expected-delivery-date' ), $amount_html, $free_delivery );
+            $allowed_elements = [
+                'strong' => [ 'class' => [] ],
+                'span'   => [ 'class' => [] ],
+                'b'      => [],
+            ];
+
             printf(
-                '<div class="woocommerce-info woo-expected-delivery-date-free-shipping">%s</div>',
-                esc_html( sprintf( __( 'Add %s more to get free delivery.', 'woo-expected-delivery-date' ), wp_strip_all_tags( wc_price( $remaining ) ) ) )
+                '<div class="woo-expected-delivery-date-free-shipping" style="background:#fff;color:#000;border-radius:10px;padding:12px 14px;margin:12px 0;border:1px solid #e0e0e0;">%s</div>',
+                wp_kses( $notice_content, $allowed_elements )
             );
         }
 
