@@ -75,7 +75,7 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
             $formatted = wp_date( 'j M Y', $expected_date->getTimestamp() );
 
             return sprintf(
-                _x( '%1$s Expected delivery by %2$s', 'shipping label with expected delivery date', 'woo-expected-delivery-date' ),
+                _x( '%1$s<br/>Expected delivery by %2$s', 'shipping label with expected delivery date', 'woo-expected-delivery-date' ),
                 $label,
                 $formatted
             );
