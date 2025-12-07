@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Woo Expected Delivery Date
- * Plugin URI:        https://stapolin.com/
+ * Plugin URI:        https://stapolin.com
  * Description:       Display expected delivery dates for WooCommerce shipping methods based on business days.
  * Version:           1.0.0
  * Author:            Stapolin
@@ -36,6 +36,10 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
 
                 add_filter( 'woocommerce_shipping_instance_form_fields_' . $method->id, [ $this, 'add_expected_delivery_field' ] );
             }
+
+            if ( ! has_filter( 'woocommerce_shipping_instance_form_fields_free_shipping', [ $this, 'add_expected_delivery_field' ] ) ) {
+                add_filter( 'woocommerce_shipping_instance_form_fields_free_shipping', [ $this, 'add_expected_delivery_field' ] );
+            }
         }
 
         public function add_expected_delivery_field( $fields ) {
@@ -44,7 +48,8 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
                 'type'              => 'number',
                 'description'       => __( 'Number of business days starting from the next business day (weekends excluded).', 'woo-expected-delivery-date' ),
                 'desc_tip'          => true,
-                'default'           => '0',
+                'default'           => '',
+                'sanitize_callback' => 'absint',
                 'custom_attributes' => [
                     'min'  => 0,
                     'step' => 1,
@@ -67,10 +72,10 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
                 return $label;
             }
 
-            $formatted = wp_date( wc_date_format(), $expected_date->getTimestamp() );
+            $formatted = wp_date( 'j M Y', $expected_date->getTimestamp() );
 
             return sprintf(
-                _x( '%1$s — Expected delivery by %2$s', 'shipping label with expected delivery date', 'woo-expected-delivery-date' ),
+                _x( '%1$s Expected delivery by %2$s', 'shipping label with expected delivery date', 'woo-expected-delivery-date' ),
                 $label,
                 $formatted
             );
@@ -89,7 +94,15 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
 
             $shipping_method = WC_Shipping_Zones::get_shipping_method( $instance_id );
 
-            if ( ! $shipping_method || empty( $shipping_method->instance_settings['expected_delivery_days'] ) ) {
+            if ( ! $shipping_method || ! is_array( $shipping_method->instance_settings ) ) {
+                return null;
+            }
+
+            if ( ! array_key_exists( 'expected_delivery_days', $shipping_method->instance_settings ) ) {
+                return null;
+            }
+
+            if ( $shipping_method->instance_settings['expected_delivery_days'] === '' ) {
                 return null;
             }
 
