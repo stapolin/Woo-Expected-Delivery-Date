@@ -4,6 +4,8 @@
 
 A WooCommerce extension that displays an expected delivery date next to each shipping method at checkout. Store owners configure the number of business days (weekends excluded) for each shipping method, and the plugin calculates the estimated delivery date based on the shopper's current date.
 
+The plugin also surfaces a friendly reminder on the cart and checkout pages showing how much more a shopper needs to add to qualify for free shipping (based on the minimum order amount configured in your Free Shipping methods).
+
 ## Requirements
 - WordPress with WooCommerce installed and active.
 - PHP 7.4+.
@@ -26,6 +28,7 @@ The expected delivery setting is available per shipping method instance inside W
 - The plugin adds an **Expected delivery (business days)** numeric field to every shipping method instance.
 - At checkout, the plugin calculates the delivery date by counting forward the configured number of business days starting from the next business day (skipping Saturdays and Sundays).
 - The expected delivery date is displayed beneath the shipping method label in the format `j M Y` (e.g., `15 Dec 2025`).
+- If a Free Shipping method in the shopper's zone requires a minimum order amount, the cart and checkout will display how much more the shopper needs to spend to unlock free delivery.
 
 ## Updating or removing the plugin
 - To update, replace `woo-expected-delivery-date.php` in `wp-content/plugins/` with the new version and reactivate if necessary.

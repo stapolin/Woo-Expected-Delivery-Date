@@ -19,6 +19,8 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
         public function __construct() {
             add_action( 'init', [ $this, 'register_shipping_method_fields' ] );
             add_filter( 'woocommerce_cart_shipping_method_full_label', [ $this, 'append_expected_delivery_to_label' ], 10, 2 );
+            add_action( 'woocommerce_before_cart_totals', [ $this, 'render_free_shipping_progress_note' ] );
+            add_action( 'woocommerce_review_order_before_shipping', [ $this, 'render_free_shipping_progress_note' ] );
         }
 
         public function register_shipping_method_fields() {
@@ -124,6 +126,72 @@ if ( ! class_exists( 'Woo_Expected_Delivery_Date' ) ) {
             }
 
             return $date;
+        }
+
+        public function render_free_shipping_progress_note() {
+            if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+                return;
+            }
+
+            $minimum = $this->get_free_shipping_minimum_amount();
+
+            if ( null === $minimum ) {
+                return;
+            }
+
+            $cart_subtotal = WC()->cart->get_displayed_subtotal();
+            $remaining     = $minimum - $cart_subtotal;
+
+            if ( $remaining <= 0 ) {
+                return;
+            }
+
+            printf(
+                '<div class="woocommerce-info woo-expected-delivery-date-free-shipping">%s</div>',
+                esc_html( sprintf( __( 'Add %s more to get free delivery.', 'woo-expected-delivery-date' ), wp_strip_all_tags( wc_price( $remaining ) ) ) )
+            );
+        }
+
+        private function get_free_shipping_minimum_amount() {
+            $cart = WC()->cart;
+
+            if ( ! $cart ) {
+                return null;
+            }
+
+            $packages = $cart->get_shipping_packages();
+            $minimums = [];
+
+            foreach ( $packages as $package ) {
+                $zone = WC_Shipping_Zones::get_zone_matching_package( $package );
+
+                if ( ! $zone || ! method_exists( $zone, 'get_shipping_methods' ) ) {
+                    continue;
+                }
+
+                foreach ( $zone->get_shipping_methods( true ) as $method ) {
+                    if ( 'free_shipping' !== $method->id ) {
+                        continue;
+                    }
+
+                    $requires   = $method->get_option( 'requires' );
+                    $min_amount = (float) $method->get_option( 'min_amount', 0 );
+
+                    if ( $min_amount <= 0 ) {
+                        continue;
+                    }
+
+                    if ( in_array( $requires, [ 'min_amount', 'either', 'both' ], true ) ) {
+                        $minimums[] = $min_amount;
+                    }
+                }
+            }
+
+            if ( empty( $minimums ) ) {
+                return null;
+            }
+
+            return min( $minimums );
         }
     }
 
